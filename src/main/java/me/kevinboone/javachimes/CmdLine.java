@@ -95,7 +95,7 @@ public static void main(String[] args) throws Exception
        System.out.println 
          ("JavaChimes version 1.0b, Copyright (c)2003-2024 Kevin Boone");
        System.out.println 
-         ("Distributed under the terms of the GNU Public Licence v.30");
+         ("Distributed under the terms of the GNU Public Licence v3.0");
       System.exit(0);
        }
     else if (popt.supplied("listdevs"))
