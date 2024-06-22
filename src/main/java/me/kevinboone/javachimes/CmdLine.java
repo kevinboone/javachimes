@@ -33,23 +33,43 @@ public static void main(String[] args) throws Exception
     final int DEFAULT_DEVICE = -1;
     final int DEFAULT_CHANNEL = 1;
     final int DEFAULT_SCALETYPE = JavaChimes.SCALETYPE_PENTATONIC;
+    final String soundfileFile = null;
 
     Popt popt = new Popt (args); 
     
     // Tell Popt what arguments we accept 
-    popt.addSwitchSpec ("channel", 'a', "channel", false, "set MIDI channel (1-16)", "channel_number", Integer.class, true);
-    popt.addSwitchSpec ("basenote", 'b', "basenote", false, "MIDI base note (1-128)", "note_number", Integer.class, true);
-    popt.addSwitchSpec ("scale", 'c', "scale", false, "scale", "interval_list", String.class, true);
-    popt.addSwitchSpec ("noteonduration", 'd', "onduration", false, "note-on duration (sec)", "on_duraction", Integer.class, true);
-    popt.addSwitchSpec ("device", 'e', "device", false, "select device", "device_number", Integer.class, true);
-    popt.addSwitchSpec ("gustyness", 'g', "gustyness", false, "`gustyness' (0-100)", "gustyness", Integer.class, true);
-    popt.addSwitchSpec ("listdevs", 'l', "listdevs", false, "list devices", true);
-    popt.addSwitchSpec ("numchimes", 'n', "numchimes", false, "number of chimes (1-10)", "num_chimes", Integer.class, true);
-    popt.addSwitchSpec ("program", 'p', "program", false, "MIDI program number (1-128)", "prog_number", Integer.class, true);
-    popt.addSwitchSpec ("seconds", 's', "seconds", false, "duration of play (seconds)", "play_duration", Integer.class, true);
-    popt.addSwitchSpec ("scaletype", 't', "scaletype", false, "scale type (0-8)", "scale_type", Integer.class, true);
-    popt.addSwitchSpec ("windspeed", 'w', "windspeed", false, "wind speed (1-100)", "wind_speed", Integer.class, true);
-    popt.addSwitchSpec ("version", 'v', "version", false, "show version", false);
+    popt.addSwitchSpec ("channel", 'a', "channel", false, 
+      "set MIDI channel (1)", "[1-16]", Integer.class, true);
+    popt.addSwitchSpec ("basenote", 'b', "basenote", false, 
+       "MIDI base note (85)", "[1-128]", Integer.class, true);
+    popt.addSwitchSpec ("scale", 'c', "scale", false, 
+       "scale", "[n1,n2,n3...]", String.class, true);
+    popt.addSwitchSpec ("noteonduration", 'd', "duration", false, 
+        "note-on duration (2)", "seconds", Integer.class, true);
+    popt.addSwitchSpec ("device", 'e', "device", false, 
+        "select device (default)", "(dev)", Integer.class, true);
+    popt.addSwitchSpec ("soundfont", 'f', "soundfont", false, 
+        "soundfont file (none)", "(file)", String.class, true);
+    popt.addSwitchSpec ("gustyness", 'g', "gustyness", false, 
+        "'gustyness' (30)", "(0-100)", Integer.class, true);
+    popt.addSwitchSpec ("listdevs", 'l', 
+        "listdevs", false, "list devices", true);
+    popt.addSwitchSpec ("numchimes", 'n', 
+        "numchimes", false, "number of chimes (5)", "(> 1)", 
+         Integer.class, true);
+    popt.addSwitchSpec ("program", 'p', 
+        "program", false, "MIDI program number (14)", 
+        "(1-128)", Integer.class, true);
+    popt.addSwitchSpec ("seconds", 's', "seconds", false, 
+        "duration of play (unlimited)", "(> 0)", 
+        Integer.class, true);
+    popt.addSwitchSpec ("scaletype", 't', 
+         "scaletype", false, "scale type (8)", "(0-11)", 
+         Integer.class, true);
+    popt.addSwitchSpec ("windspeed", 'w', "windspeed", false, 
+         "wind speed (20)", "(1-100)", Integer.class, true);
+    popt.addSwitchSpec ("version", 'v', "version", false, 
+         "show version", false);
 
     // Add help arguments for --help, -h, and -?
     popt.addHelp (true, true, true);
@@ -58,20 +78,24 @@ public static void main(String[] args) throws Exception
     if (popt.parse() == false)
       {
       System.err.println (popt.getErrorMessage());
-      System.err.println ("Usage: java -jar javachimes.jar " + popt.getShortUsage());
+      System.err.println ("Usage: java -jar javachimes.jar " + 
+         popt.getShortUsage());
       System.err.println (popt.getUsage());
       System.exit(-1);
       }
 
     if (popt.supplied("help"))
       {
-      System.out.println ("Usage: java -jar javachimes.jar " + popt.getShortUsage());
+      System.out.println ("Usage: java -jar javachimes.jar " + "[options]");
       System.out.println (popt.getUsage());
       System.exit(0);
       }
     else if (popt.supplied("version"))
        {
-       System.out.println ("JavaChimes version 1.0 (c)2001 Kevin Boone/Web-Tomorrow");
+       System.out.println 
+         ("JavaChimes version 1.0b, Copyright (c)2003-2024 Kevin Boone");
+       System.out.println 
+         ("Distributed under the terms of the GNU Public Licence v.30");
       System.exit(0);
        }
     else if (popt.supplied("listdevs"))
@@ -87,13 +111,25 @@ public static void main(String[] args) throws Exception
       {
       JavaChimes javaChimes = new JavaChimes();
 
-      javaChimes.setProgram (popt.getIntOrDefault ("program", DEFAULT_PROGRAM));
-      javaChimes.setNoteOnDuration (popt.getIntOrDefault("noteonduration", DEFAULT_NOTE_ON_DURATION));
-      javaChimes.setWindSpeed (popt.getIntOrDefault ("windspeed", DEFAULT_WINDSPEED)); 
-      javaChimes.setGustyness (popt.getIntOrDefault ("gustyness", DEFAULT_GUSTYNESS)); 
-      javaChimes.setBaseNote (popt.getIntOrDefault ("basenote", DEFAULT_BASENOTE)); 
-      javaChimes.setDevice (popt.getIntOrDefault ("device", DEFAULT_DEVICE)); 
-      javaChimes.setChannel (popt.getIntOrDefault ("channel", DEFAULT_CHANNEL)); 
+      if (popt.supplied ("soundfont"))
+        javaChimes.setSoundbankFile (popt.getString ("soundfont"));
+      javaChimes.setProgram (popt.getIntOrDefault 
+        ("program", DEFAULT_PROGRAM));
+
+      javaChimes.setProgram (popt.getIntOrDefault 
+        ("program", DEFAULT_PROGRAM));
+      javaChimes.setNoteOnDuration (popt.getIntOrDefault
+        ("noteonduration", DEFAULT_NOTE_ON_DURATION));
+      javaChimes.setWindSpeed (popt.getIntOrDefault 
+        ("windspeed", DEFAULT_WINDSPEED)); 
+      javaChimes.setGustyness (popt.getIntOrDefault 
+        ("gustyness", DEFAULT_GUSTYNESS)); 
+      javaChimes.setBaseNote (popt.getIntOrDefault 
+        ("basenote", DEFAULT_BASENOTE)); 
+      javaChimes.setDevice (popt.getIntOrDefault 
+        ("device", DEFAULT_DEVICE)); 
+      javaChimes.setChannel (popt.getIntOrDefault 
+        ("channel", DEFAULT_CHANNEL)); 
       if (popt.supplied ("scaletype"))
 	javaChimes.setScaleType (popt.getInt ("scaletype")); 
       else if (popt.supplied ("scale"))
@@ -101,7 +137,8 @@ public static void main(String[] args) throws Exception
       else 
 	javaChimes.setScaleType (DEFAULT_SCALETYPE);
 
-      javaChimes.setNumChimes (popt.getIntOrDefault ("numchimes", DEFAULT_NUMCHIMES)); 
+      javaChimes.setNumChimes (popt.getIntOrDefault 
+        ("numchimes", DEFAULT_NUMCHIMES)); 
 
       javaChimes.start();
 

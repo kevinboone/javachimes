@@ -1,0 +1,178 @@
+.\" Copyright (C) 2003-24 Kevin Boone 
+.\" Permission is granted to any individual or institution to use, copy, or
+.\" redistribute this software so long as all of the original files are
+.\" included, and that this copyright notice is retained.
+.\"
+.TH epub2txt 1 "June 2024"
+.SH NAME
+javachimes \- a wind chimes simulator 
+.SH SYNOPSIS
+.B javachimes 
+.RB [options]
+.PP
+
+.SH DESCRIPTION
+\fIjavachimes\fR simulates the  
+sound of a mechanical wind-chime using MIDI notes generated
+using the Java sound API. By default, it will use the 
+tone generator built into the Java virtual machine, but it can be
+configured to use an external MIDI device if you have one. 
+It supports soundbanks in SoundFont 2 format, or it can use the 
+JVM's built in instrument patches.
+
+
+.SH ALGORITHM
+\fIjavachimes\fR 
+is controlled by two main parameters: 
+`windspeed' (w) and (lacking a better term) `gustyness' (g). The
+average rate of tones is proportional to the windspeed parameter, while
+`gustyness' controls the variability in this rate.  If g=0, then 
+the rate of generation of
+tones will be approximately constant.  Technically, the rate of generation (in
+seconds) is randomly selected from a normal distribution whose mean is w/10,
+and whose standard deviation is g/10. 
+
+A low windspeed (e.g., < 10), coupled with a high gustyness (e.g., > 20) gives
+a pattern of intense bursts of activity separated by long pauses, which is
+quite typical or real wind-chimes. However, the long periods of silence
+might make it difficult to tell whether the program is working.
+
+.SH "OPTIONS"
+.TP
+.BI -a,\-\-channel\ (number)
+Sets the MIDI output channel, in the range 1-16. This is not particularly
+relevant for soundboard-based synthesizers, as they typically respond on all
+channels. However, it may well be important for external sound generators. In
+all cases, bear in mind the General MIDI specifications call for channel 10 to
+be reserved for percussion effects. The default value is 1.
+.LP
+.TP
+.BI -b,\-\-basenote\ (1-128) 
+The base (root) note of the scale, when using one of the built-in scales.
+This is specified as a MIDI note number, where middle C is `60' and adding one
+increases the pitch by a semitone (so the C two octaves above middle C is 84
+-- 60 + 12 + 12). This parameter is ignored when the --scale switch is in use.
+The default value is 85.
+.LP
+.TP
+.BI -c,\-\-scale\ (n1,n2,n3...) 
+Specifies the exact set of notes to use, as MIDI note numbers separated
+by commas.
+.LP
+.TP
+.BI -d,\-\-onduration\ (seconds) 
+Set the note-on duration. The default
+is two seconds. Longer values sound more realistic, especially at lower
+pitches, but at the expense of increased memory and CPU usage.
+.LP
+.TP
+.BI -e,\-\-device\ (number) 
+Specify the MIDI device. The default is to use the first one known to the
+JVM, which is usual the internal sound generator.
+.LP
+.TP
+.BI -f,\-\-soundfont\ (file) 
+Java usually supports soundbanks in SoundFont 2 format; files usually have
+names ending in `.sf2`. Some JVMs may support other formats. See 'resources'
+section below for information about configuring memory, if necessary.
+If this option is not given, JavaChimes will use default instrument sounds.
+.LP
+.TP
+.BI -g,\-\-gustiness\ (0-100) 
+Sets the `gustyness' of the wind; this affects the variability in the
+time delays between chimes. See `algorithm' below. The default value is
+30.
+.LP
+.TP
+.BI -l,\-\-listdevs
+Lists the know MIDI devices with their numbers. The number can then be used
+as a parameter to the `--device` switch to select from a range of installed
+devices or drivers.
+.LP
+.TP
+.BI -n,\-\-numchimes\ (1-10) 
+Select the number of chimes to use. `1' is allowed, but not very interesting.
+The default is 5. 
+.LP
+.TP
+.BI -p,\-\-program\ (1-128) 
+Selects the program (voice, instrument) to use. See notes below. Default
+is 14: usually xylophone or bell.
+.LP
+.TP
+.BI -s,\-\-seconds\ (number) 
+Specifies the number of seconds for which to play. The default is to
+play forever, until the program is forcibly stopped by control-C or 
+whatever.
+.LP
+.TP
+.BI -t,\-\-scaletype\ (0-11) 
+Sets which of the pre-defined scales to use. The default is `8', a 
+pentatonic scale. This switch is over-ridden by `--scale'. See
+\fIscales\fR below.
+.LP
+.TP
+.BI -w,\-\-windspeed\ (1-100) 
+Sets the wind-speed, which affects the rate production of sound events.
+Default is 20.
+.LP
+.TP
+.BI -v,\-\-version
+Fooo
+.LP
+.TP
+.BI -h,\-\-help
+Shows command-line usage.
+.LP
+
+.SH "SCALES"
+
+JavaChimes supports a number of pre-defined scales, or an exact scale can be
+specified on the command line. The default is to use a pentatonic scale.
+Other scales are:
+
+0: major (7 notes) 
+
+1: natural minor (7 notes)  
+
+2: harmonic minor (7 notes)  
+
+3: melodic minor (7 notes)  
+
+4: enigmatic (7 notes)  
+
+5: chromatic (11 notes)  
+
+6: arpeggio (3 notes)  
+
+7: dominant (`barbershop') seventh (4 notes)  
+
+8: pentatonic (5 notes) (this is the default)  
+
+9: Greek pentatonic (5 notes)  
+
+10: Gregorian (7 notes)  
+
+11: Hijazi (7 notes)  
+
+The notes of the scale are determined by the base note and 
+number of chimes, as well as the scale itself, 
+
+To use an exact scale, give the \fI--scale\fR argument followed by
+a list of MIDI note numbers, separated by commas.
+
+.SH ENVIRONMENT 
+
+The environment variable \fIJAVA_OPTS\fR is passed directly to the
+java command line. This can be useful to specify a heap size limit,
+for example.
+
+
+
+
+.SH AUTHOR AND LEGAL
+\fIjavachimes\fR is maintained by Kevin Boone, and is open source under the
+terms of the GNU Public Licence, version 3.0. There is no warranty of any kind.
+
+
+.\" end of file

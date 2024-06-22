@@ -2,6 +2,7 @@ package me.kevinboone.javachimes;
 import javax.sound.midi.*;
 import java.util.*;
 
+
 /**
 */
 public class JavaChimes extends Thread 
@@ -61,6 +62,7 @@ protected int device = -1;
 protected int channelNumber = 0;
 protected Random random = new Random();
 protected int[] scale;
+protected String soundbankFile = null;
 
 /**
 Constructor readies the synth device, etc
@@ -90,6 +92,11 @@ protected void checkRange (final int x, final int min,
   if (x < min || x > max) 
     throw new JavaChimesIllegalArgumentException 
       ("Argument out of range (" + min + "-" + max + ") in " + method + "()"); 
+  }
+
+public void setSoundbankFile (String soundbankFile)
+  {
+  this.soundbankFile = soundbankFile;
   }
 
 /**
@@ -306,11 +313,31 @@ public void open () throws JavaChimesException
     throw new JavaChimesException ("Selected MIDI device is not a synthesizer");
     }
 
-  Soundbank sb = synthesizer.getDefaultSoundbank();
-  if (sb != null) 
+  if (soundbankFile == null)
     {
-    Instrument[] instruments = synthesizer.getDefaultSoundbank().getInstruments();
-    synthesizer.loadInstrument(instruments[0]);
+    Soundbank sb = synthesizer.getDefaultSoundbank();
+    if (sb != null) 
+      {
+      Instrument[] instruments = synthesizer.getDefaultSoundbank().getInstruments();
+      synthesizer.loadInstrument(instruments[0]);
+      }
+    }
+  else
+    {
+    try
+      {
+      MidiSystem.getSequencer(false); // Workaround for JVM bug
+      synthesizer.unloadAllInstruments (synthesizer.getDefaultSoundbank());
+      Soundbank sb = MidiSystem.getSoundbank 
+           (new java.io.File (soundbankFile));
+      synthesizer.loadAllInstruments (sb);
+      }
+    catch (Exception e)
+      { 
+      //e.printStackTrace();
+      throw new JavaChimesException ("Can't load soundbank file: " 
+        + e.toString());
+      }
     }
 
   MidiChannel midiChannels[] = synthesizer.getChannels();
